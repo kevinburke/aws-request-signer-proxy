@@ -3,7 +3,7 @@ package controllers
 import java.time.{LocalDateTime, ZoneId}
 import javax.inject._
 
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, BasicSessionCredentials, DefaultAWSCredentialsProviderChain}
 import io.ticofab.AwsSigner
 import play.api.http.HttpEntity
 import play.api.libs.ws._
@@ -135,9 +135,18 @@ class ProxyController @Inject()(ws: WSClient, configuration: Configuration) exte
   }
 
   private def awsCredentialsProvider = {
-    (configuration.getString("proxy.aws.accessKey"), configuration.getString("proxy.aws.secretkey")) match {
+    (configuration.getString("proxy.aws.accessKey"), configuration.getString("proxy.aws.secretkey"), configuration.getString("proxy.aws.sessionkey")) match {
       // use the credentials specified in configuration if they exist
-      case (Some(accessKey), Some(secretKey)) => new AWSStaticCredentialsProvider(
+      case (Some(accessKey), Some(secretKey), Some(sessionKey)) => new AWSStaticCredentialsProvider(
+        new BasicSessionCredentials(
+          accessKey,
+          secretKey,
+          sessionKey
+        )
+      )
+
+      // use the credentials specified in configuration if they exist
+      case (Some(accessKey), Some(secretKey), None) => new AWSStaticCredentialsProvider(
         new BasicAWSCredentials(
           accessKey,
           secretKey
