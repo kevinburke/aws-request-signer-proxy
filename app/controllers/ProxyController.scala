@@ -30,9 +30,11 @@ class ProxyController @Inject()(ws: WSClient, configuration: Configuration) exte
     }.toSeq.sortBy(_._1)
 
     // remove headers we don't want to sign and send to AWS
-    val filteredHeaders = incomingRequest.headers.headers.filterNot {
+    val filteredHeaders = incomingRequest.headers.headers.filter {
       // we need to override the Host header
-      case ("Host", _) => false
+      case ("Host", _) => {
+				false
+			}
       // AWS doesn't seem to like when we include the Accept-Encoding header, not sure why yet
       case ("Accept-Encoding", _) => false
       // allow all other headers
@@ -79,6 +81,7 @@ class ProxyController @Inject()(ws: WSClient, configuration: Configuration) exte
     )
 
     val onlyNewHeaders = allSignedHeaders -- outgoingRequest.headers.keys
+
     outgoingRequest.withHeaders(onlyNewHeaders.toSeq: _*)
   }
 
